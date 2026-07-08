@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Room Flow Board</title>
-<meta name="description" content="Room Flow Board — clinic room & queue management.">
+<title>SU Flow Board</title>
+<meta name="description" content="SU Flow Board — clinic room & queue management.">
 <meta name="theme-color" content="#1f4e5f">
 <!-- Icons / favicons -->
 <link rel="icon" href="favicon.ico" sizes="any">
@@ -15,7 +15,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Room Flow Board">
+<meta name="apple-mobile-web-app-title" content="SU Flow Board">
 <!-- Firebase (only used if FIREBASE_CONFIG is filled in below) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -151,7 +151,7 @@
 <body>
 <header>
   <img class="logo" src="logo.png" alt="" onerror="this.style.display='none'">
-  <h1>Room Flow Board</h1><span id="clock">--:--</span><span id="syncst" class="syncst">local</span>
+  <h1>SU Flow Board</h1><span id="clock">--:--</span><span id="syncst" class="syncst">local</span>
   <div class="spacer"></div>
   <button id="undoBtn" onclick="undo()" title="Undo the last change (up to 5)" disabled>↶ Undo</button>
   <button onclick="openTLog()">👥 By therapist</button>
@@ -222,7 +222,7 @@
 <div class="modal-bg" id="loginOverlay" style="background:rgba(31,78,95,.97)"><div class="modal" style="max-width:360px">
   <h2>Sign in</h2>
   <div class="mbody">
-    <p class="hint">Staff login for the Room Flow Board.</p>
+    <p class="hint">Staff login for the SU Flow Board.</p>
     <input id="loginEmail" type="text" autocomplete="username" placeholder="Username" style="width:100%;margin-bottom:8px">
     <input id="loginPwd" type="password" autocomplete="current-password" placeholder="Password" style="width:100%" onkeydown="if(event.key==='Enter')doLogin()">
     <div id="loginErr" style="color:#c0392b;font-size:13px;margin-top:8px"></div>
