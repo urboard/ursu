@@ -27,7 +27,9 @@
   header{position:sticky;top:0;z-index:20;background:var(--head);color:#fff;padding:10px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;box-shadow:0 2px 6px rgba(0,0,0,.12)}
   header h1{font-size:18px;margin:0;font-weight:700}
   .logo{height:30px;width:auto;border-radius:6px;background:#fff;padding:2px}
-  #clock{font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;background:rgba(255,255,255,.14);padding:3px 10px;border-radius:6px}
+  #clock{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.05}
+  .nowbox{display:inline-flex;flex-direction:column;line-height:1.1;opacity:.92}
+  #dateStamp{font-size:11px;font-weight:600;opacity:.72;white-space:nowrap}
   .syncst{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.16)}
   .syncst.cloud{background:#2e7d32}.syncst.err{background:#b9534f}
   .spacer{flex:1}
@@ -43,7 +45,10 @@
   .menu button.danger{color:#c0392b}.menu button.danger:hover{background:#f7e4e2}
   .menu-sep{height:1px;background:var(--line);margin:4px 2px}
   main{padding:16px;max-width:1500px;margin:0 auto}
-  .arrive-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:16px}
+  .arrive-bar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 10px;margin-bottom:10px}
+  .arrive-bar strong{font-size:13px;flex:none}
+  .arrive-bar input,.arrive-bar select{padding:5px 7px;font-size:13px}
+  .arrive-bar .btn{padding:6px 10px;font-size:13px}
   .arrive-bar strong{color:var(--head)}
   input,select{font-family:inherit;font-size:14px;padding:7px 8px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
   input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
@@ -117,6 +122,11 @@
   .tag{display:inline-block;background:#e6f4ea;color:#256b39;border-radius:12px;padding:2px 9px;margin:2px 3px 2px 0;font-weight:700;font-size:12px}
   .tag.busy{background:#fdeede;color:#8a5212}
   .witem{border:1px solid var(--line);border-radius:8px;padding:7px 8px;margin-bottom:7px;background:#fbfdfd;display:flex;flex-direction:column;gap:5px}
+  .miniToggle{background:#eef3f4;border:1px solid var(--line);border-radius:10px;padding:1px 7px;font-size:12px;cursor:pointer;line-height:1.5;vertical-align:middle;flex:none}
+  .miniToggle:hover{border-color:var(--accent)}
+  .miniToggle.on{background:#e3eef0;border-color:var(--accent)}
+  .notetext{font-size:13px;color:#8a5212;cursor:pointer;background:#fff3d6;border:1px solid #f0d48a;border-radius:7px;padding:4px 8px;display:inline-block;font-weight:600}
+  .notetext:hover{border-color:var(--accent)}
   .witem.wmed{background:#fff8e1;border-color:#f0d48a}.witem.wlong{background:#fdeaea;border-color:#e9a3a3}
   .witem .wtop{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
   .wmin{font-weight:800;font-variant-numeric:tabular-nums}
@@ -128,6 +138,20 @@
   .qname{font-weight:700;font-size:15px;flex:1}
   .qactions{display:flex;gap:6px;align-items:center;margin-top:6px}
   .qactions select{flex:1;min-width:60px}
+  .qitem.compact{padding:8px 10px}
+  .qtop2{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .qleft{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+  .qleft .qtime{font-size:12px;flex:none}
+  .qleft .qname{font-size:15px;flex:none}
+  .qdoc{font-size:12px;color:var(--head);font-weight:700;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .qright{display:flex;flex-direction:column;gap:5px;align-items:stretch;flex:none}
+  .qmore{background:none;border:0;color:var(--muted);cursor:pointer;font-size:12px;padding:3px 6px;border-radius:5px;white-space:nowrap}
+  .theraSel{width:120px;font-size:12px;padding:3px 6px}
+  .qexp{margin-top:8px}
+  .qrowB{display:flex;align-items:center;gap:8px}
+  .qrowB .txwrap{flex:1;min-width:0}
+  .sendSel{flex:none;width:150px}
+  .qx{flex:none;background:#e3e9eb;border:0;border-radius:6px;color:var(--ink);font-size:13px;font-weight:700;padding:6px 9px;cursor:pointer}
   .empty{color:var(--muted);font-style:italic;padding:8px 2px;font-size:13px}
   .filterbar{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:13px}
   .filterbar label{display:flex;align-items:center;gap:5px;color:var(--ink);font-weight:700;cursor:pointer}
@@ -151,7 +175,7 @@
 <body>
 <header>
   <img class="logo" src="logo.png" alt="" onerror="this.style.display='none'">
-  <h1>SU Flow Board</h1><span id="clock">--:--</span><span id="dateStamp" title="Date of the appointments loaded on this board" style="font-size:13px;font-weight:700;background:rgba(255,255,255,.14);padding:3px 10px;border-radius:6px"></span><span id="syncst" class="syncst">local</span>
+  <h1>SU Flow Board</h1><span class="nowbox"><span id="clock">--:--</span><span id="dateStamp" title="Date of the appointments loaded on this board"></span></span><span id="syncst" class="syncst">local</span>
   <div class="spacer"></div>
   <button id="undoBtn" onclick="undo()" title="Undo the last change (up to 5)" disabled>↶ Undo</button>
   <button onclick="openTLog()">👥 By therapist</button>
@@ -171,18 +195,20 @@
   <input type="file" id="importer" accept="application/json" style="display:none" onchange="importState(event)">
 </header>
 <main>
-  <div class="arrive-bar">
-    <strong>Add / walk-in:</strong>
-    <input id="arriveName" list="custList" placeholder="Type or pick name…" style="min-width:200px">
-    <datalist id="custList"></datalist>
-    <select id="arriveDoc" title="Doctor" style="width:140px"></select>
-    <input id="arriveTime" class="timein" placeholder="time e.g. 345" style="width:120px">
-    <input id="arriveTx" list="txList" placeholder="Treatment" style="width:170px">
-    <button class="btn" onclick="arrive()">+ Add to queue</button>
-  </div>
   <datalist id="txList"></datalist>
   <div class="layout">
-    <div><div id="roomsHost"></div></div>
+    <div>
+      <div class="arrive-bar">
+        <strong>Add / walk-in:</strong>
+        <input id="arriveName" list="custList" placeholder="Type or pick name…" style="min-width:170px">
+        <datalist id="custList"></datalist>
+        <select id="arriveDoc" title="Doctor" style="width:120px"></select>
+        <input id="arriveTime" class="timein" placeholder="time e.g. 345" style="width:100px">
+        <input id="arriveTx" list="txList" placeholder="Treatment" style="width:140px">
+        <button class="btn" onclick="arrive()">+ Add to queue</button>
+      </div>
+      <div id="roomsHost"></div>
+    </div>
     <div class="rightcol">
       <div class="panel" id="theraPanel"></div>
       <div class="panel" id="waitPanel"></div>
@@ -258,6 +284,7 @@ const SEED={
 };
 let state=migrate(load())||freshState();
 let editingDocId=null,editingDocRoom=null,editingTimeId=null,editingTheraRoom=null,editingMaskRoom=null;
+let expandedQ=null;
 let cloudRef=null,applyingRemote=false,saveTimer=null;
 let undoStack=[],histLast=null;const UNDO_MAX=5;
 
@@ -276,7 +303,7 @@ function migrate(s){if(!s)return null;if(!s.completed)s.completed=[];if(!s.remov
   const __rooms=s.groups.flatMap(g=>g.rooms);Object.keys(s.occ).forEach(r=>{const o=s.occ[r];if(o&&!__rooms.includes(r)){s.queue.push({id:s.seq++,customer:o.customer,doctor:o.doctor||"",therapist:o.therapist||"",treatment:txArr(o.treatment),appt:o.appt||"",arrivedAt:nowHM()});delete s.occ[r];}});
   const BAD=["Dr Fong","Dr Agnes","Dr Yi Wen / Dr Fong"];const fixd=d=>d==="Dr Yi Wen / Dr Fong"?"Dr Yi Wen":(d||"");
   if(s.doctors)s.doctors=s.doctors.filter(d=>!BAD.includes(d));
-  (s.queue||[]).forEach(q=>{if(q.arrivedAt===undefined)q.arrivedAt="";q.doctor=fixd(q.doctor);q.treatment=txArr(q.treatment);});
+  (s.queue||[]).forEach(q=>{if(q.arrivedAt===undefined)q.arrivedAt="";q.doctor=fixd(q.doctor);q.treatment=txArr(q.treatment);q.consult=!!q.consult;q.consultant=q.consultant||"";});
   Object.values(s.occ||{}).forEach(o=>{if(o){if(o.note===undefined)o.note="";if(o.nextRoom===undefined)o.nextRoom="";o.doctor=fixd(o.doctor);o.treatment=txArr(o.treatment);o.txDone=txArr(o.txDone);}});
   Object.values(s.customers||{}).forEach(c=>{if(c)c.doctor=fixd(c.doctor);});
   (s.completed||[]).forEach(c=>{c.doctor=fixd(c.doctor);c.treatment=txArr(c.treatment);});
@@ -332,6 +359,25 @@ function arrive(){const name=$("arriveName").value.trim();if(!name){toast("Type 
 function setCustDoc(name,v){if(name){state.customers[name]=state.customers[name]||{doctor:"",therapist:""};state.customers[name].doctor=v;}}
 function qSetDoctor(id,v){const q=state.queue.find(x=>x.id==id);if(q){q.doctor=v;setCustDoc(q.customer,v);editingDocId=null;commit();}}
 function qSetAppt(id,v){const q=state.queue.find(x=>x.id==id);if(q){q.appt=v;editingTimeId=null;commit();}}
+function qSetThera(id,v){const q=state.queue.find(x=>x.id==id);if(q){q.therapist=v;commit();}}
+function qConsultSet(id,on){const q=state.queue.find(x=>x.id==id);if(!q)return;q.consult=on;if(!on){q.consultant="";}else{
+  q.treatment=txArr(q.treatment);["Goldius Glam","Oxy"].forEach(t=>{if(!q.treatment.includes(t))q.treatment.push(t);});}
+  commit();}
+let editingQConsultant=null;
+function qConsultantToggle(id){editingQConsultant=editingQConsultant===id?null:id;render();setTimeout(()=>{const el=$("activeQConsultant");if(el){el.focus();}},0);}
+function qConsultantSave(id,v){const q=state.queue.find(x=>x.id==id);if(!q)return;q.consultant=v;editingQConsultant=null;commit();}
+function qConsultBadge(q){
+  return `<button class="miniToggle${q.consult?' on':''}" title="${q.consult?'tap to remove consult tag':'tag this visit as a consult'}" onclick="qConsultSet(${q.id},${q.consult?'false':'true'})">🩺</button>`;}
+function qConsultDetail(q){
+  if(!q.consult)return"";
+  const editing=editingQConsultant===q.id;
+  const hasPL=txArr(q.treatment).includes("Pro Light");
+  return `<div style="margin:2px 0;display:flex;align-items:center;gap:5px;flex-wrap:wrap">`+
+    (editing?`<input id="activeQConsultant" class="timein" style="width:120px" value="${esc(q.consultant||'')}" placeholder="consultant name" onkeydown="if(event.key==='Enter')this.blur()" onblur="qConsultantSave(${q.id},this.value)">`:
+      (q.consultant?`<span class="notetext" title="click to edit" onclick="qConsultantToggle(${q.id})">${esc(q.consultant)}</span>`:`<button class="chip" style="padding:2px 7px;font-size:11px" onclick="qConsultantToggle(${q.id})">+ consultant</button>`))+
+    (hasPL?'':`<button class="chip" style="padding:2px 7px;font-size:11px" title="add Pro Light" onclick="qTxAdd(${q.id},'Pro Light')">+ Pro Light</button>`)+
+    `</div>`;}
+function toggleQ(id){expandedQ=(expandedQ==id)?null:id;render();}
 function editDoc(id){editingDocId=id;editingDocRoom=null;editingTimeId=null;editingTheraRoom=null;editingMaskRoom=null;render();}
 function editTime(id){editingTimeId=id;editingDocId=null;editingDocRoom=null;editingTheraRoom=null;editingMaskRoom=null;render();}
 function editTheraRoom(room){editingTheraRoom=room;editingDocId=null;editingDocRoom=null;editingTimeId=null;editingMaskRoom=null;render();}
@@ -384,7 +430,7 @@ function maskClass(o){if(!o.mask)return"";const d=toMin(o.mask)-curMin();if(d<0)
 function docInline(id,doc){return editingDocId===id?`<select id="activeEdit" onblur="cancelEdit()" onchange="qSetDoctor(${id},this.value)" style="flex:1">${docOptions(doc)}</select>`:`<span class="docline">${esc(doc)||'no doctor'}</span><button class="docedit" title="change doctor" onclick="editDoc(${id})">✎</button>`;}
 
 function render(){
-  const _ds=$("dateStamp");if(_ds)_ds.textContent=state.syncDate?("📅 "+state.syncDate):"";
+  const _ds=$("dateStamp");if(_ds){const _d=new Date(),_M=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];_ds.textContent=(state.syncDate||(pad(_d.getDate())+"/"+_M[_d.getMonth()]+"/"+_d.getFullYear())).replace(/\//g,' ');}
   $("custList").innerHTML=Object.keys(state.customers||{}).sort().map(n=>`<option value="${esc(n)}">`).join('');
   $("txList").innerHTML=state.treatments.map(t=>`<option value="${esc(t)}">`).join('');
   fillSel("arriveDoc",docOptions(""));
@@ -438,7 +484,8 @@ function renderWaiting(){
   if(!w.length){html+=`<div class="hint">No one checked in. Tap “✓ Arrived” on an appointment.</div>`;}
   w.forEach(({q,wait})=>{const cls=wait>=40?'wlong':wait>=20?'wmed':'';
     html+=`<div class="witem ${cls}"><div class="wtop"><b>${esc(q.customer)}</b><span class="wmin">${wait}m</span></div>
-      <div class="qmeta" style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)">${docInline(q.id,q.doctor)}${q.appt?' · '+esc(hm12(q.appt)):''}</div>
+      <div class="qmeta" style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)">${docInline(q.id,q.doctor)}${q.appt?' · '+esc(hm12(q.appt)):''}<span style="flex:1"></span>${qConsultBadge(q)}<select style="width:96px;flex:none" onchange="qSetThera(${q.id},this.value)">${thOptions(q.therapist)}</select></div>
+      ${qConsultDetail(q)}
       <div class="txwrap">${txChips(q.treatment,`qTxRemove(${q.id},`)}<input class="txin" list="txList" placeholder="+ tx" onchange="qTxAdd(${q.id},this.value);this.value=''"></div>
       <div style="display:flex;gap:6px;align-items:center"><select onchange="moveQueueToRoom(${q.id},this.value)" style="flex:1">${sendRoomOpts('→ room ▾')}</select><button class="btn sm grey" title="Clicked Arrived by mistake — send back to appointments" onclick="qCheckIn(${q.id})">↩ appts</button><button class="btn sm grey" title="Remove customer (logged in Records)" onclick="removeQueue(${q.id})">✕</button></div></div>`;});
   $("waitPanel").innerHTML=html;
@@ -457,11 +504,16 @@ function renderQueue(){
 }
 function qCard(q){
   const timeEl=editingTimeId===q.id?`<input id="activeEdit" class="timein" value="${esc(hm12(q.appt))}" placeholder="e.g. 345" onkeydown="if(event.key==='Enter')this.blur()" onblur="qSetAppt(${q.id},parseTimeInput(this.value))" style="width:92px">`:`<span class="qtime" title="click to edit time" style="cursor:pointer" onclick="editTime(${q.id})">${q.appt?esc(hm12(q.appt)):'＋ set time'}</span>`;
-  return `<div class="qitem"><div class="qtop">${timeEl}<span class="qname">${esc(q.customer)}</span>
-      <button class="btn sm grey" title="Remove" onclick="removeQueue(${q.id})">✕</button></div>
-    <div class="txwrap" style="margin-top:6px">${txChips(q.treatment,`qTxRemove(${q.id},`)}<input class="txin" list="txList" placeholder="+ treatment" onchange="qTxAdd(${q.id},this.value);this.value=''"></div>
-    <div class="qactions">${docInline(q.id,q.doctor)}<span style="flex:1"></span><button class="chip" onclick="qCheckIn(${q.id})">✓ Arrived</button></div>
-    <div class="qactions"><select onchange="moveQueueToRoom(${q.id},this.value)">${sendRoomOpts('Send to room ▾')}</select></div></div>`;
+  const open=expandedQ===q.id;
+  const docEl=editingDocId===q.id
+    ? `<select id="activeEdit" onblur="cancelEdit()" onchange="qSetDoctor(${q.id},this.value)" style="flex:1">${docOptions(q.doctor)}</select>`
+    : `<span>${esc(q.doctor)||'no doctor'}</span>${open?`<button class="docedit" title="change doctor" onclick="editDoc(${q.id})">✎</button><select class="theraSel" title="therapist" onchange="qSetThera(${q.id},this.value)">${thOptions(q.therapist)}</select>`:''}`;
+  let h=`<div class="qitem compact"><div class="qtop2">
+      <div class="qleft">${timeEl}<span class="qname">${esc(q.customer)}</span><span class="qdoc">${docEl}</span></div>
+      <div class="qright"><button class="chip" onclick="qCheckIn(${q.id})">✓ Arrived</button><button class="qmore" title="more" onclick="toggleQ(${q.id})">${open?'▴ less':'⋯ more'}</button></div>
+    </div>`;
+  if(open){h+=`<div class="qexp"><div class="qrowB"><div class="txwrap" style="flex:1">${txChips(q.treatment,`qTxRemove(${q.id},`)}<input class="txin" list="txList" placeholder="+ treatment" onchange="qTxAdd(${q.id},this.value);this.value=''"></div><select class="sendSel" onchange="moveQueueToRoom(${q.id},this.value)">${sendRoomOpts('Send to room ▾')}</select><button class="qx" title="Remove" onclick="removeQueue(${q.id})">✕</button></div></div>`;}
+  return h+`</div>`;
 }
 
 function therapistGroups(){
@@ -529,7 +581,7 @@ function importState(ev){const f=ev.target.files[0];if(!f)return;const r=new Fil
     state=inc;commit();toast(rescued?("Appointments loaded — "+rescued+" occupied room(s) moved back to queue"):"Appointments loaded (your lists kept)");
   }catch(e){toast("Could not read file");}};r.readAsText(f);ev.target.value="";}
 
-function setSync(t,cls){const e=$("syncst");if(e){e.textContent=t;e.className="syncst"+(cls?" "+cls:"");}}
+function setSync(t,cls){const e=$("syncst");if(e){e.textContent=t;e.className="syncst"+(cls?" "+cls:"");e.style.display=cls==='cloud'?'none':'';}}
 function connectCloud(){
   if(cloudRef)return;const db=firebase.database();cloudRef=db.ref(FIREBASE_PATH);
   cloudRef.on('value',snap=>{const v=snap.val();if(typeof v==='string'){try{applyingRemote=true;state=migrate(JSON.parse(v));try{localStorage.setItem(LS_KEY,JSON.stringify(state));}catch(e){}recordHistory();render();}catch(e){}applyingRemote=false;}});
