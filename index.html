@@ -151,7 +151,7 @@
 <body>
 <header>
   <img class="logo" src="logo.png" alt="" onerror="this.style.display='none'">
-  <h1>SU Flow Board</h1><span id="clock">--:--</span><span id="syncst" class="syncst">local</span>
+  <h1>SU Flow Board</h1><span id="clock">--:--</span><span id="dateStamp" title="Date of the appointments loaded on this board" style="font-size:13px;font-weight:700;background:rgba(255,255,255,.14);padding:3px 10px;border-radius:6px"></span><span id="syncst" class="syncst">local</span>
   <div class="spacer"></div>
   <button id="undoBtn" onclick="undo()" title="Undo the last change (up to 5)" disabled>↶ Undo</button>
   <button onclick="openTLog()">👥 By therapist</button>
@@ -209,13 +209,12 @@
 <div class="modal-bg" id="settingsModal"><div class="modal">
   <h2>Edit lists <span onclick="closeModal('settingsModal')">✕</span></h2>
   <div class="mbody settings">
-    <p class="hint">One item per line. Customers: <code>NAME = Doctor = Therapist</code>.</p>
+    <p class="hint">One item per line.</p>
     <div class="grp"><label>Downstairs rooms</label><textarea id="setDown"></textarea></div>
     <div class="grp"><label>Upstairs rooms</label><textarea id="setUp"></textarea></div>
     <div class="grp"><label>Doctors</label><textarea id="setDoctors"></textarea></div>
     <div class="grp"><label>Therapists</label><textarea id="setTherapists"></textarea></div>
     <div class="grp"><label>Treatments</label><textarea id="setTreatments"></textarea></div>
-    <div class="grp"><label>Customers &amp; fixed doctor/therapist</label><textarea id="setCustomers" style="height:140px"></textarea></div>
   </div>
   <div class="mfoot"><button class="btn grey" onclick="closeModal('settingsModal')">Cancel</button><button class="btn" onclick="saveSettings()">Save lists</button></div>
 </div></div>
@@ -245,21 +244,17 @@ const FIREBASE_CONFIG={
   appId: "1:931901355365:web:4b589b158902ed12cbdd8c",
   measurementId: ""
 };
-
 const FIREBASE_PATH="board";
-const LOGIN_DOMAIN="ursu.local"; // Staff will type 'ursu' to log in
+const LOGIN_DOMAIN="ursu.local"; // staff type a username; app appends this to make the Firebase email
 
-const LS_KEY="roomFlowBoard_ursu_v4"; // Separates browser memory from the old branch
+const LS_KEY="roomFlowBoard_ursu_v4";
 const SEED_TX=["Goldius Glam","Alex","Pro Light","P7","Revive","E2","EXO-T","S Plus (Face)","S Plus (Neck)","HIFU (Face)","HIFU (Neck)","Oxy","SRW","Soft Laser","Radiesse","Filler","Botox","dePigmentation","Revital"];
 const SEED={
-  doctors: ["Dr 1", "Dr 2"], // Type your new branch doctors here
-  therapists: ["Thera 1", "Thera 2"], // Type your new branch therapists here
-  treatments: [...SEED_TX],
-  groups: [
-    {name: "Downstairs", rooms: ["Room 1", "Room 2"]}, // Customize your room names here
-    {name: "Upstairs", rooms: ["Room 3", "Room 4"]}
-  ],
-  customers: {}
+  doctors:["Dr Cheryl","Dr Nicole","Dr Teh","Dr Chan","Dr Yi Wen","Dr Michelle","Dr Eunice"],
+  therapists:["Regina","Karene","Yunny","Xiao Wei","Chloe","Yan Yun","Katherine","Iris"],
+  treatments:[...SEED_TX],
+  groups:[{name:"Downstairs",rooms:["Con 1","Con 2","Room 1 (Alex)","Room 2 (Andy)"]},{name:"Upstairs",rooms:["R1","R2","R3","R4","Classroom","R5","R6","R7"]}],
+  customers:{}
 };
 let state=migrate(load())||freshState();
 let editingDocId=null,editingDocRoom=null,editingTimeId=null,editingTheraRoom=null,editingMaskRoom=null;
@@ -278,8 +273,9 @@ function migrate(s){if(!s)return null;if(!s.completed)s.completed=[];if(!s.remov
   if(!s.occ||typeof s.occ!=='object')s.occ={};
   s.groups.forEach(g=>g.rooms.forEach(r=>{if(!(r in s.occ))s.occ[r]=null;}));
   if(!s.seq)s.seq=s.queue.reduce((m,q)=>Math.max(m,q.id||0),0)+1;
-  const BAD=[];const fixd=d=>(d||"");
-if(s.doctors)s.doctors=s.doctors.filter(d=>!BAD.includes(d));
+  const __rooms=s.groups.flatMap(g=>g.rooms);Object.keys(s.occ).forEach(r=>{const o=s.occ[r];if(o&&!__rooms.includes(r)){s.queue.push({id:s.seq++,customer:o.customer,doctor:o.doctor||"",therapist:o.therapist||"",treatment:txArr(o.treatment),appt:o.appt||"",arrivedAt:nowHM()});delete s.occ[r];}});
+  const BAD=["Dr Fong","Dr Agnes","Dr Yi Wen / Dr Fong"];const fixd=d=>d==="Dr Yi Wen / Dr Fong"?"Dr Yi Wen":(d||"");
+  if(s.doctors)s.doctors=s.doctors.filter(d=>!BAD.includes(d));
   (s.queue||[]).forEach(q=>{if(q.arrivedAt===undefined)q.arrivedAt="";q.doctor=fixd(q.doctor);q.treatment=txArr(q.treatment);});
   Object.values(s.occ||{}).forEach(o=>{if(o){if(o.note===undefined)o.note="";if(o.nextRoom===undefined)o.nextRoom="";o.doctor=fixd(o.doctor);o.treatment=txArr(o.treatment);o.txDone=txArr(o.txDone);}});
   Object.values(s.customers||{}).forEach(c=>{if(c)c.doctor=fixd(c.doctor);});
@@ -308,6 +304,7 @@ function restoreBackup(t){const b=loadBackups().find(x=>x.t===t);if(!b)return;
 
 function $(id){return document.getElementById(id);}
 function esc(s){return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function jsq(s){return esc(String(s||"").replace(/\\/g,'\\\\').replace(/'/g,"\\'"));}
 function pad(n){return String(n).padStart(2,'0');}
 function curMin(){const d=new Date();return d.getHours()*60+d.getMinutes();}
 function toMin(hm){if(!hm)return null;const[h,m]=hm.split(":").map(Number);return h*60+(m||0);}
@@ -387,6 +384,7 @@ function maskClass(o){if(!o.mask)return"";const d=toMin(o.mask)-curMin();if(d<0)
 function docInline(id,doc){return editingDocId===id?`<select id="activeEdit" onblur="cancelEdit()" onchange="qSetDoctor(${id},this.value)" style="flex:1">${docOptions(doc)}</select>`:`<span class="docline">${esc(doc)||'no doctor'}</span><button class="docedit" title="change doctor" onclick="editDoc(${id})">✎</button>`;}
 
 function render(){
+  const _ds=$("dateStamp");if(_ds)_ds.textContent=state.syncDate?("📅 "+state.syncDate):"";
   $("custList").innerHTML=Object.keys(state.customers||{}).sort().map(n=>`<option value="${esc(n)}">`).join('');
   $("txList").innerHTML=state.treatments.map(t=>`<option value="${esc(t)}">`).join('');
   fillSel("arriveDoc",docOptions(""));
@@ -400,27 +398,27 @@ function roomCard(room){
   const nb=nx?`<div class="nextbanner">⏭ Next here: ${esc(nx.customer)} (from ${esc(nx.from)})</div>`:'';
   if(!o){const qOpts=['<option value="">Assign from queue ▾</option>'].concat(state.queue.map(q=>`<option value="${q.id}">${esc(q.customer)}${q.arrivedAt?' (waiting)':''}</option>`)).join('');
     return `<div class="room free${nx?' hasnext':''}"><div class="rhead"><span class="rname">${esc(room)}</span><span class="pill">${nx?'RESERVED':'FREE'}</span></div>
-      <div class="freebody">${nb}<select onchange="assignFreeRoom('${esc(room)}',this.value)">${qOpts}</select></div></div>`;}
+      <div class="freebody">${nb}<select onchange="assignFreeRoom('${jsq(room)}',this.value)">${qOpts}</select></div></div>`;}
   const nextOpts=['<option value="">set next room…</option>'].concat(allRooms().filter(r=>r!==room).map(r=>`<option ${o.nextRoom===r?'selected':''}>${esc(r)}</option>`)).join('');
-  const goBtn=o.nextRoom?`<button class="btn sm" onclick="moveRoomToRoom('${esc(room)}','${esc(o.nextRoom)}')">→ ${esc(o.nextRoom)} now</button>`:'';
-  const docEl=editingDocRoom===room?`<select id="activeEdit" onblur="cancelEdit()" onchange="roomSetDoctor('${esc(room)}',this.value)" style="flex:1">${docOptions(o.doctor)}</select>`:`<span class="docline">${esc(o.doctor)||'no doctor'}</span><button class="docedit" title="change doctor" onclick="editDocRoom('${esc(room)}')">✎</button>`;
+  const goBtn=o.nextRoom?`<button class="btn sm" onclick="moveRoomToRoom('${jsq(room)}','${jsq(o.nextRoom)}')">→ ${esc(o.nextRoom)} now</button>`:'';
+  const docEl=editingDocRoom===room?`<select id="activeEdit" onblur="cancelEdit()" onchange="roomSetDoctor('${jsq(room)}',this.value)" style="flex:1">${docOptions(o.doctor)}</select>`:`<span class="docline">${esc(o.doctor)||'no doctor'}</span><button class="docedit" title="change doctor" onclick="editDocRoom('${jsq(room)}')">✎</button>`;
   const editingT=editingTheraRoom===room;
-  const theraEl=(!o.therapist||editingT)?`<select ${editingT?'id="activeEdit" onblur="cancelEdit()"':''} onchange="roomSetTherapist('${esc(room)}',this.value)" style="flex:1">${thOptions(o.therapist)}</select>`:`<span class="docline">${esc(o.therapist)}</span><button class="docedit" title="change therapist" onclick="editTheraRoom('${esc(room)}')">✎</button>`;
-  const remChips=txArr(o.treatment).map((x,i)=>`<span class="txchip"><span class="txname" title="tap when done" onclick="roomTxDone('${esc(room)}',${i})">${esc(x)}</span><b title="remove" onclick="roomTxRemove('${esc(room)}',${i})">✕</b></span>`).join('');
-  const doneChips=txArr(o.txDone).map((x,i)=>`<span class="txchip done"><span class="txname" title="tap to undo" onclick="roomTxUndo('${esc(room)}',${i})">${esc(x)}</span></span>`).join('');
+  const theraEl=(!o.therapist||editingT)?`<select ${editingT?'id="activeEdit" onblur="cancelEdit()"':''} onchange="roomSetTherapist('${jsq(room)}',this.value)" style="flex:1">${thOptions(o.therapist)}</select>`:`<span class="docline">${esc(o.therapist)}</span><button class="docedit" title="change therapist" onclick="editTheraRoom('${jsq(room)}')">✎</button>`;
+  const remChips=txArr(o.treatment).map((x,i)=>`<span class="txchip"><span class="txname" title="tap when done" onclick="roomTxDone('${jsq(room)}',${i})">${esc(x)}</span><b title="remove" onclick="roomTxRemove('${jsq(room)}',${i})">✕</b></span>`).join('');
+  const doneChips=txArr(o.txDone).map((x,i)=>`<span class="txchip done"><span class="txname" title="tap to undo" onclick="roomTxUndo('${jsq(room)}',${i})">${esc(x)}</span></span>`).join('');
   return `<div class="room occ${maskClass(o)}${o.therapist?'':' noThera'}"><div class="rhead"><span class="rname">${esc(room)}</span><span class="pill">${o.mask&&toMin(o.mask)-curMin()<0?'MASK OFF':'IN USE'}</span></div>
     <div class="body">${nb}${o.therapist?'':'<div class="noTheraBanner">⚠ No therapist assigned</div>'}
       <div class="cust">${esc(o.customer)}</div>
       <div class="fieldrow"><label>Doctor</label><div style="flex:1;display:flex;align-items:center;gap:4px;padding-top:6px">${docEl}</div></div>
       <div class="fieldrow"><label>Thera.</label><div style="flex:1;display:flex;align-items:center;gap:4px;padding-top:6px">${theraEl}</div></div>
-      <div class="fieldrow"><label>Tx</label><div class="txwrap">${remChips}<input class="txin" list="txList" placeholder="+ add" onchange="roomTxAdd('${esc(room)}',this.value);this.value=''"></div></div>
+      <div class="fieldrow"><label>Tx</label><div class="txwrap">${remChips}<input class="txin" list="txList" placeholder="+ add" onchange="roomTxAdd('${jsq(room)}',this.value);this.value=''"></div></div>
       ${doneChips?`<div class="fieldrow"><label>Done</label><div class="txwrap">${doneChips}</div></div>`:''}
-      ${o.mask?`<div class="fieldrow"><label>Mask off</label><div style="flex:1;padding-top:6px"><b>${esc(hm12(o.mask))}</b><span class="mstep"><button title="+1 min" onclick="maskBump('${esc(room)}',1)">▲</button><button title="-1 min" onclick="maskBump('${esc(room)}',-1)">▼</button></span>${maskRel(o.mask)} <button class="maskx" title="clear mask-off time" onclick="maskClear('${esc(room)}')">✕</button></div></div>`:`<div class="fieldrow maskrow"><label style="width:auto">Mask</label><span class="hint">on for:</span><button class="chip" onclick="maskIn('${esc(room)}',5)">5m</button><button class="chip" onclick="maskIn('${esc(room)}',10)">10m</button><button class="chip" onclick="maskIn('${esc(room)}',15)">15m</button><span class="maskbreak"></span><span class="mhidden">Mask</span><span class="hint mhidden">on for:</span><input class="timein" title="exact time" placeholder="e.g. 345" onchange="roomSet('${esc(room)}','mask',parseTimeInput(this.value))"></div>`}
-      <div class="fieldrow"><label>Note</label><input class="note-in" value="${esc(o.note||'')}" placeholder="remark for this room…" onchange="roomSet('${esc(room)}','note',this.value)"></div>
-      <div class="fieldrow"><label>Next →</label><select onchange="roomSetNext('${esc(room)}',this.value)">${nextOpts}</select></div>
+      ${o.mask?`<div class="fieldrow"><label>Mask off</label><div style="flex:1;padding-top:6px"><b>${esc(hm12(o.mask))}</b><span class="mstep"><button title="+1 min" onclick="maskBump('${jsq(room)}',1)">▲</button><button title="-1 min" onclick="maskBump('${jsq(room)}',-1)">▼</button></span>${maskRel(o.mask)} <button class="maskx" title="clear mask-off time" onclick="maskClear('${jsq(room)}')">✕</button></div></div>`:`<div class="fieldrow maskrow"><label style="width:auto">Mask</label><span class="hint">on for:</span><button class="chip" onclick="maskIn('${jsq(room)}',5)">5m</button><button class="chip" onclick="maskIn('${jsq(room)}',10)">10m</button><button class="chip" onclick="maskIn('${jsq(room)}',15)">15m</button><span class="maskbreak"></span><span class="mhidden">Mask</span><span class="hint mhidden">on for:</span><input class="timein" title="exact time" placeholder="e.g. 345" onchange="roomSet('${jsq(room)}','mask',parseTimeInput(this.value))"></div>`}
+      <div class="fieldrow"><label>Note</label><input class="note-in" value="${esc(o.note||'')}" placeholder="remark for this room…" onchange="roomSet('${jsq(room)}','note',this.value)"></div>
+      <div class="fieldrow"><label>Next →</label><select onchange="roomSetNext('${jsq(room)}',this.value)">${nextOpts}</select></div>
       <div class="actions">${goBtn}
-        <button class="btn sm red" onclick="clearRoom('${esc(room)}')">Clear Room</button>
-        <button class="btn sm grey" onclick="roomToQueue('${esc(room)}')">↩ Back to queue</button>
+        <button class="btn sm red" onclick="clearRoom('${jsq(room)}')">Clear Room</button>
+        <button class="btn sm grey" onclick="roomToQueue('${jsq(room)}')">↩ Back to queue</button>
       </div>
     </div></div>`;
 }
@@ -499,11 +497,10 @@ function copyStr(str){if(navigator.clipboard){navigator.clipboard.writeText(str)
 
 function openSettings(){const dn=state.groups.find(g=>g.name==="Downstairs")||state.groups[0];const up=state.groups.find(g=>g.name==="Upstairs")||state.groups[1]||{rooms:[]};
   $("setDown").value=dn.rooms.join("\n");$("setUp").value=up.rooms.join("\n");$("setDoctors").value=state.doctors.join("\n");$("setTherapists").value=state.therapists.join("\n");$("setTreatments").value=state.treatments.join("\n");
-  $("setCustomers").value=Object.entries(state.customers).map(([n,c])=>{let s=n;if(c.doctor||c.therapist)s+=" = "+(c.doctor||"");if(c.therapist)s+=" = "+c.therapist;return s;}).join("\n");$("settingsModal").classList.add("show");}
+  $("settingsModal").classList.add("show");}
 function saveSettings(){const lines=t=>t.value.split("\n").map(x=>x.trim()).filter(Boolean);
   const newGroups=[{name:"Downstairs",rooms:lines($("setDown"))},{name:"Upstairs",rooms:lines($("setUp"))}];
   state.doctors=lines($("setDoctors"));state.therapists=lines($("setTherapists"));state.treatments=lines($("setTreatments"));
-  const cust={};lines($("setCustomers")).forEach(l=>{const p=l.split("=").map(x=>x.trim());cust[p[0]]={doctor:p[1]||"",therapist:p[2]||""};});state.customers=cust;
   const newRooms=newGroups.flatMap(g=>g.rooms);const occ={};newRooms.forEach(r=>occ[r]=state.occ[r]||null);
   allRooms().forEach(r=>{if(!newRooms.includes(r)&&state.occ[r]){const o=state.occ[r];state.queue.push({id:nextId(),customer:o.customer,doctor:o.doctor,therapist:o.therapist,treatment:txArr(o.treatment),appt:o.appt||"",arrivedAt:nowHM()});}});
   state.groups=newGroups;state.occ=occ;closeModal('settingsModal');commit();toast("Lists saved");}
@@ -511,13 +508,25 @@ function closeModal(id){$(id).classList.remove("show");}
 
 function exportState(){const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="room-flow-state-"+nowHM().replace(":","")+".json";a.click();toast("State saved to file");}
 function importState(ev){const f=ev.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{
+    const raw=JSON.parse(r.result);
+    if(!raw||typeof raw!=='object'||Array.isArray(raw)||!Array.isArray(raw.queue)){
+      toast("File isn't a valid appointments file (missing the expected format) — nothing was changed");
+      ev.target.value="";return;
+    }
     autoBackup();
-    const inc=migrate(JSON.parse(r.result));
+    const inc=migrate(raw);
     // keep the operator's configuration lists — a day file only refreshes appointments
     inc.doctors=state.doctors;inc.therapists=state.therapists;inc.treatments=state.treatments;inc.groups=state.groups;
     inc.customers=Object.assign({},state.customers,inc.customers||{});
-    const occ={};state.groups.forEach(g=>g.rooms.forEach(rm=>occ[rm]=(inc.occ&&inc.occ[rm])||null));inc.occ=occ;
-    state=inc;commit();toast("Appointments loaded (your lists kept)");
+    const occ={};let rescued=0;
+    state.groups.forEach(g=>g.rooms.forEach(rm=>{
+      const incoming=(inc.occ&&inc.occ[rm])||null;
+      const current=state.occ[rm];
+      if(!incoming&&current){inc.queue.push({id:inc.seq++,customer:current.customer,doctor:current.doctor,therapist:current.therapist,treatment:txArr(current.treatment),appt:current.appt||"",arrivedAt:nowHM()});rescued++;occ[rm]=null;}
+      else occ[rm]=incoming;
+    }));
+    inc.occ=occ;
+    state=inc;commit();toast(rescued?("Appointments loaded — "+rescued+" occupied room(s) moved back to queue"):"Appointments loaded (your lists kept)");
   }catch(e){toast("Could not read file");}};r.readAsText(f);ev.target.value="";}
 
 function setSync(t,cls){const e=$("syncst");if(e){e.textContent=t;e.className="syncst"+(cls?" "+cls:"");}}
