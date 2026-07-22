@@ -156,10 +156,10 @@
   .qright{display:flex;flex-direction:column;gap:5px;align-items:stretch;flex:none}
   .qmore{background:none;border:0;color:var(--muted);cursor:pointer;font-size:12px;padding:3px 6px;border-radius:5px;white-space:nowrap}
   .theraSel{width:120px;font-size:12px;padding:3px 6px}
-  .qexp{margin-top:8px}
+  .qexp{margin-top:8px;display:flex;flex-direction:column;gap:8px}
   .qrowB{display:flex;align-items:center;gap:8px}
   .qrowB .txwrap{flex:1;min-width:0}
-  .sendSel{flex:none;width:150px}
+  .sendSel{flex:1;min-width:0}
   .qx{flex:none;background:#e3e9eb;border:0;border-radius:6px;color:var(--ink);font-size:13px;font-weight:700;padding:6px 9px;cursor:pointer}
   .empty{color:var(--muted);font-style:italic;padding:8px 2px;font-size:13px}
   .filterbar{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:13px}
@@ -539,7 +539,7 @@ function qCard(q){
       <div class="qleft">${timeEl}<span class="qname">${esc(q.customer)}</span><span class="qdoc">${docEl}</span></div>
       <div class="qright"><button class="chip" onclick="qCheckIn(${q.id})">✓ Arrived</button><button class="qmore" title="more" onclick="toggleQ(${q.id})">${open?'▴ less':'⋯ more'}</button></div>
     </div>`;
-  if(open){h+=`<div class="qexp"><div class="qrowB"><div class="txwrap" style="flex:1">${txChips(q.treatment,`qTxRemove(${q.id},`)}<input class="txin" list="txList" placeholder="+ treatment" onchange="qTxAdd(${q.id},this.value);this.value=''"></div><select class="sendSel" onchange="moveQueueToRoom(${q.id},this.value)">${sendRoomOpts('Send to room ▾')}</select><button class="qx" title="Remove" onclick="removeQueue(${q.id})">✕</button></div></div>`;}
+  if(open){h+=`<div class="qexp"><div class="txwrap">${txChips(q.treatment,`qTxRemove(${q.id},`)}<input class="txin" list="txList" placeholder="+ treatment" onchange="qTxAdd(${q.id},this.value);this.value=''"></div><div class="qrowB"><select class="sendSel" onchange="moveQueueToRoom(${q.id},this.value)">${sendRoomOpts('Send to room ▾')}</select><button class="qx" title="Remove" onclick="removeQueue(${q.id})">✕</button></div></div>`;}
   return h+`</div>`;
 }
 
